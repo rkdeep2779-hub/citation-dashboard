@@ -1,52 +1,45 @@
 import useSWR from "swr";
-import { supabase } from "../lib/supabaseClient";
-import { useRouter } from "next/router";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+
+const fetcher = (url) => fetch(url).then((r) => r.json());
 
 export default function Dashboard() {
-  const fetcher = (url) => fetch(url).then((r) => r.json());
   const { data } = useSWR("/api/dashboard", fetcher);
 
-  const router = useRouter();
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
-
   return (
-    <div style={{ padding: 40 }}>
-      <button
-        onClick={logout}
-        style={{
-          padding: "10px 20px",
-          background: "red",
-          color: "white",
-          borderRadius: 5,
-          marginBottom: 20,
-          cursor: "pointer",
-        }}
-      >
-        Logout
-      </button>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Total Clients</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">
+            {data?.clients || 0}
+          </p>
+        </CardContent>
+      </Card>
 
-      <h1 style={{ fontSize: 32, marginBottom: 20 }}>Dashboard</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>Total Submissions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">
+            {data?.submissions || 0}
+          </p>
+        </CardContent>
+      </Card>
 
-      <div style={{ display: "flex", gap: 20 }}>
-        <div style={{ padding: 20, background: "#fff", borderRadius: 10 }}>
-          <h3>Total Clients</h3>
-          <p style={{ fontSize: 24 }}>{data?.clients || 0}</p>
-        </div>
-
-        <div style={{ padding: 20, background: "#fff", borderRadius: 10 }}>
-          <h3>Total Submissions</h3>
-          <p style={{ fontSize: 24 }}>{data?.submissions || 0}</p>
-        </div>
-
-        <div style={{ padding: 20, background: "#fff", borderRadius: 10 }}>
-          <h3>Live Listings</h3>
-          <p style={{ fontSize: 24 }}>{data?.live || 0}</p>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Live Listings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">
+            {data?.live || 0}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
