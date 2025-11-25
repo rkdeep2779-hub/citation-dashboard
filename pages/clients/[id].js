@@ -1,62 +1,61 @@
-import { useRouter } from "next/router";
 import useSWR from "swr";
+import { useRouter } from "next/router";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
 
-export default function ClientDetail() {
+const fetcher = (url) => fetch(url).then((r) => r.json());
+
+export default function ClientDetails() {
   const router = useRouter();
   const { id } = router.query;
 
-  const fetcher = (url) => fetch(url).then((r) => r.json());
-  const { data, mutate } = useSWR(id ? `/api/clients/${id}` : null, fetcher);
+  const { data } = useSWR(`/api/clients/${id}`, fetcher);
 
-  const handleUpdate = async (submissionId, field, value) => {
-    await fetch("/api/submissions/update", {
-      method: "POST",
-      body: JSON.stringify({
-        submissionId,
-        status: field === "status" ? value : undefined,
-        url: field === "url" ? value : undefined,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+  if (!data) return <p>Loading...</p>;
 
-    mutate();
-  };
+  const client = data.client;
+  const directories = data.directories || [];
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1 style={{ fontSize: 24 }}>{data?.client?.name}</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">{client.name}</h1>
 
-      <div style={{ marginTop: 20 }}>
-        {data?.submissions?.map((s) => (
-          <div
-            key={s.id}
-            style={{
-              padding: 20,
-              background: "#fff",
-              borderRadius: 10,
-              marginBottom: 10,
-            }}
-          >
-            <h3>{s.directories?.name}</h3>
+      {/* Client Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Client Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p><strong>Phone:</strong> {client.phone}</p>
+          <p><strong>Website:</strong> {client.website}</p>
+        </CardContent>
+      </Card>
 
-            <select
-              value={s.status}
-              onChange={(e) => handleUpdate(s.id, "status", e.target.value)}
-            >
-              <option>Pending</option>
-              <option>Submitted</option>
-              <option>Verified</option>
-              <option>Live</option>
-              <option>Rejected</option>
-            </select>
+      {/* Directory Listings */}
+      <h2 className="text-2xl font-semibold">Directory Listings</h2>
 
-            <input
-              style={{ marginLeft: 10 }}
-              value={s.url || ""}
-              onChange={(e) => handleUpdate(s.id, "url", e.target.value)}
+      <div className="grid gap-4">
+        {directories.map((dir) => (
+          <Card key={dir.id} className="p-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-semibold">{dir.directory_name}</h3>
+
+              <select
+                defaultValue={dir.status}
+                className="border p-2 rounded"
+              >
+                <option value="Pending">Pending</option>
+                <option value="Live">Live</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+
+            <Input
+              defaultValue={dir.listing_url}
               placeholder="Listing URL"
+              className="mt-3"
             />
-          </div>
+          </Card>
         ))}
       </div>
     </div>
