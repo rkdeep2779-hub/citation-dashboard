@@ -1,13 +1,14 @@
 import "../styles/globals.css";
+import Layout from "../components/layout";
+import { supabase } from "../lib/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { supabase } from "../lib/supabaseClient";
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
-  const publicRoutes = ["/login"]; // pages user can see without login
+  const publicRoutes = ["/login"];
 
   useEffect(() => {
     const checkSession = async () => {
@@ -27,6 +28,9 @@ export default function MyApp({ Component, pageProps }) {
 
   if (loading) return <p>Loading...</p>;
 
-  return <Component {...pageProps} />;
+  return (
+    <Layout>
+      <Component {...pageProps} />
+    </Layout>
+  );
 }
-
