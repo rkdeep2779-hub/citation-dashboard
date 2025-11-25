@@ -1,36 +1,45 @@
-import "../styles/globals.css";
-import Layout from "../components/layout";
-import { supabase } from "../lib/supabaseClient";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import useSWR from "swr";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
 
-export default function MyApp({ Component, pageProps }) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
+const fetcher = (url) => fetch(url).then((r) => r.json());
 
-  const publicRoutes = ["/login"];
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session && !publicRoutes.includes(router.pathname)) {
-        router.push("/login");
-      } else {
-        setLoading(false);
-      }
-    };
-
-    checkSession();
-  }, [router.pathname]);
-
-  if (loading) return <p>Loading...</p>;
+export default function Dashboard() {
+  const { data } = useSWR("/api/dashboard", fetcher);
 
   return (
-    <Layout>
-      <Component {...pageProps} />
-    </Layout>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Total Clients</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">
+            {data?.clients || 0}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Total Submissions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">
+            {data?.submissions || 0}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Live Listings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold">
+            {data?.live || 0}
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
