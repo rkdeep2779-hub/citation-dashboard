@@ -1,77 +1,68 @@
-import { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
+
+export const getServerSideProps = () => {
+  return { props: {} }; // prevents static generation
+};
 
 export default function Login() {
-  const router = useRouter();
+  const [supabase, setSupabase] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
+  useEffect(() => {
+    async function load() {
+      const { createClient } = await import("@supabase/supabase-js");
+
+      const client = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      );
+
+      setSupabase(client);
+    }
+
+    load();
+  }, []);
+
+  async function handleLogin(e) {
     e.preventDefault();
+
+    if (!supabase) {
+      alert("Loading...");
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push("/");
-    }
-  };
+    if (error) alert(error.message);
+    else window.location.href = "/";
+  }
 
   return (
-    <div style={{ padding: 40, maxWidth: 400, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 28, marginBottom: 20 }}>Login</h1>
+    <div className="flex justify-center items-center h-screen">
+      <form onSubmit={handleLogin} className="space-y-4 p-6 border rounded w-80">
+        <h1 className="text-2xl font-bold">Login</h1>
 
-      <form onSubmit={handleLogin}>
         <input
+          className="border p-2 rounded w-full"
           type="email"
           placeholder="Email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginBottom: 10,
-            borderRadius: 5,
-            border: "1px solid #ccc",
-          }}
-          required
+          onChange={(e)=>setEmail(e.target.value)}
         />
 
         <input
+          className="border p-2 rounded w-full"
           type="password"
           placeholder="Password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 10,
-            marginBottom: 10,
-            borderRadius: 5,
-            border: "1px solid #ccc",
-          }}
-          required
+          onChange={(e)=>setPassword(e.target.value)}
         />
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
-
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            padding: 10,
-            background: "#333",
-            color: "white",
-            borderRadius: 5,
-            cursor: "pointer",
-            marginTop: 10,
-          }}
-        >
+        <button className="bg-black text-white p-2 w-full rounded">
           Login
         </button>
       </form>
